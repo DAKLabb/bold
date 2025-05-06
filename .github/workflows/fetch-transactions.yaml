@@ -17,3 +17,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: go run main.go
+      - name: Ensure no changes to git-tracked files
+        id: check-for-changes
+        run: |
+          if git diff --exit-code; then
+            echo "No changes to commit."
+            echo "updates=false" >> $GITHUB_OUTPUT
+          else
+            echo "updates=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Open PR with fixes
+        if: steps.check-for-changes.outputs.updates == 'true'
+        id: cpr
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_PAT }}
+          commit-message: "update summary"
+          title: "update summary"
+          branch: automated-update
+          delete-branch: true
+
+      - name: Enable Pull Request Automerge
+        if: steps.cpr.outputs.pull-request-operation == 'created'
+        uses: peter-evans/enable-pull-request-automerge@v3
+        with:
+          token: ${{ secrets.GITHUB_PAT }}
+          pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
+          merge-method: squash
