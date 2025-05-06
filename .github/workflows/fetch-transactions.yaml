@@ -1,0 +1,19 @@
+name: Hello World CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+env:
+  SS_API: ${{ secrets.SS_API }}
+
+jobs:
+  update-total:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: go run main.go
